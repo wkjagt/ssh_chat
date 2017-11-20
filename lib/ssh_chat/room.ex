@@ -34,12 +34,12 @@ defmodule SshChat.Room do
   end
 
   def handle_cast({:announce, message}, sessions) do
-    send_to_members(message, sessions)
+    send_to_sessions(sessions, message)
     {:noreply, sessions}
   end
 
   def handle_cast({:message, from, message}, sessions) do
-    send_to_members(message, sessions, from)
+    send_to_sessions(sessions, message, from)
     {:noreply, sessions}
   end
 
@@ -49,15 +49,13 @@ defmodule SshChat.Room do
     {:noreply, sessions}
   end
 
-  defp send_to_members(message, sessions) do
+  defp send_to_sessions(sessions, message) do
     Enum.each(sessions, &send_to_session(&1, message))
   end
 
-  defp send_to_members(message, sessions, from) do
-    send_to_members(
-      "#{sessions[from]}: #{message}",
-      Enum.filter(sessions, fn {pid, _name} -> pid != from end)
-    )
+  defp send_to_sessions(sessions, message, from) do
+    msg = "#{sessions[from]}: #{message}"
+    Enum.filter(sessions, fn {pid, _name} -> pid != from end) |> send_to_sessions(msg)
   end
 
   defp send_to_session({pid, _name}, message) do
