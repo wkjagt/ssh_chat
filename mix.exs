@@ -13,7 +13,7 @@ defmodule SshChat.Mixfile do
 
   def application do
     [
-      mod: {SshChat.Application, []},
+      mod: {SshChat, []},
       extra_applications: [:logger, :ssh]
     ]
   end

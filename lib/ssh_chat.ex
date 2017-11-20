@@ -1,12 +1,14 @@
-# require Logger
-# require IEx
+defmodule SshChat do
+  use Application
 
-# defmodule SshChat do
-#   use Application
+  def start(_type, _args) do
+    import Supervisor.Spec
 
-#   def start(_type, _args) do
-#     port = Application.get_env :telnet_chat, :port, 2222
+    children = [
+      supervisor(SshChat.SSH.Supervisor, [])
+    ]
 
-#     SshChat.SSH.Supervisor.start_link([port])
-#   end
-# end
+    opts = [strategy: :one_for_one, name: SshChat.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
