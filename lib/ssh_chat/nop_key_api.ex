@@ -1,18 +1,14 @@
-defmodule SshChat.NopKeyApi do
-  @moduledoc """
-  NOP out out the ssh_server_key_api behaviour since we accept all users
-  """
+require Logger
 
+defmodule SshChat.NopKeyApi do
   @behaviour :ssh_server_key_api
 
   def host_key(algorithm, props) do
-    # delegate to the ssh file key api
     :ssh_file.host_key(algorithm, props)
   end
 
-  def is_auth_key(_key, _user, _options) do
-    # all are welcome!
+  def is_auth_key(key, user, _options) do
+    Logger.info("Authorized #{user}")
     true
   end
-
 end

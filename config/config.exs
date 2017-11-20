@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :telnet_chat, key: :value
+#     config :ssh_chat, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:telnet_chat, :key)
+#     Application.get_env(:ssh_chat, :key)
 #
 # You can also configure a 3rd-party app:
 #

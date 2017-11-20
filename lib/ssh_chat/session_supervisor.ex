@@ -1,10 +1,8 @@
 defmodule SshChat.SessionSupervisor do
   use Supervisor
 
-  @name SshChat.SessionSupervisor
-
   def start_link do
-    Supervisor.start_link(__MODULE__, :ok, name: @name)
+    Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def init(:ok) do

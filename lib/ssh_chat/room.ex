@@ -1,10 +1,6 @@
+require IEx
+
 defmodule SshChat.Room do
-  @moduledoc """
-  The users connected to the chat room
-
-  There is only one room
-  """
-
   use GenServer
 
   @name __MODULE__
@@ -14,14 +10,8 @@ defmodule SshChat.Room do
   end
 
   def register(pid, name) do
-    # let's say for now that the user list is going to be a map from peer addresses to pods
     announce("#{name} joined")
     GenServer.cast(@name, {:register, pid, name})
-  end
-
-  def unregister(pid) do
-    name = GenServer.call(@name, {:unregister, pid})
-    announce("#{name} left")
   end
 
   def announce(message) do
@@ -38,34 +28,18 @@ defmodule SshChat.Room do
     {:ok, %{}}
   end
 
-  def handle_call({:unregister, pid}, _from, sessions) do
-    {name, sessions} = Map.pop(sessions, pid)
-    {:reply, name, Map.delete(sessions, name)}
-  end
-
   def handle_cast({:register, pid, name}, sessions) do
     Process.monitor(pid)
     {:noreply, Map.put(sessions, pid, name)}
   end
 
   def handle_cast({:announce, message}, sessions) do
-    Map.keys(sessions)
-    |> Enum.each(fn(pid) -> SshChat.Session.send_message(pid, " * #{message}") end)
+    send_to_others(message, nil, sessions)
     {:noreply, sessions}
   end
 
   def handle_cast({:message, from, message}, sessions) do
-    {name, others} = cond do
-      is_pid(from) ->
-        {name, others} = Map.pop(sessions, from)
-
-        {name, others}
-      :else -> {from, sessions}
-    end
-
-    others
-    |> Map.keys
-    |> Enum.each(fn(pid) -> SshChat.Session.send_message(pid, "#{name}: #{message}") end)
+    send_to_others(message, from, sessions)
     {:noreply, sessions}
   end
 
@@ -75,4 +49,11 @@ defmodule SshChat.Room do
     {:noreply, sessions}
   end
 
+  defp send_to_others(message, from, sessions) do
+    Enum.each sessions, fn {pid, _name} ->
+      unless pid == from do
+        SshChat.Session.send_message(pid, "#{sessions[from]}: #{message}")
+      end
+    end
+  end
 end
