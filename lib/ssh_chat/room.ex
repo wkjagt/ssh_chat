@@ -34,12 +34,12 @@ defmodule SshChat.Room do
   end
 
   def handle_cast({:announce, message}, sessions) do
-    send_to_others(message, nil, sessions)
+    send_to_members(message, sessions)
     {:noreply, sessions}
   end
 
   def handle_cast({:message, from, message}, sessions) do
-    send_to_others(message, from, sessions)
+    send_to_members(message, sessions, from)
     {:noreply, sessions}
   end
 
@@ -49,11 +49,19 @@ defmodule SshChat.Room do
     {:noreply, sessions}
   end
 
-  defp send_to_others(message, from, sessions) do
-    Enum.each sessions, fn {pid, _name} ->
+  defp send_to_members(message, sessions) do
+    Enum.each(sessions, &send_to_session(&1, message))
+  end
+
+  defp send_to_members(message, sessions, from) do
+    Enum.each sessions, fn {pid, name} ->
       unless pid == from do
-        SshChat.Session.send_message(pid, "#{sessions[from]}: #{message}")
+        send_to_session({pid, name}, "#{sessions[from]}: #{message}")
       end
     end
+  end
+
+  defp send_to_session({pid, _name}, message, exlude_pid \\ nil) when exlude_pid != pid do
+    SshChat.Session.send_message(pid, message)
   end
 end
