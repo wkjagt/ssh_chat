@@ -1,3 +1,0 @@
-defmodule SshChatSSH do
-
-end

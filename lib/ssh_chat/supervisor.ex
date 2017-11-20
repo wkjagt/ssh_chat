@@ -3,13 +3,13 @@ defmodule SshChatSupervisor do
 
   @name SshChatSupervisor
 
-  def start_link do
-    Supervisor.start_link(__MODULE__, :ok, name: @name)
+  def start_link(config) do
+    Supervisor.start_link(__MODULE__, config, name: @name)
   end
 
-  def init(:ok) do
+  def init(config) do
     children = [
-      worker(SshChatDaemon, []),
+      worker(SshChatDaemon, [config]),
       supervisor(SshChatSession.Supervisor, []),
       worker(SshChatRoom, []),
     ]
