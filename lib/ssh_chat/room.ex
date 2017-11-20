@@ -54,14 +54,13 @@ defmodule SshChat.Room do
   end
 
   defp send_to_members(message, sessions, from) do
-    Enum.each sessions, fn {pid, name} ->
-      unless pid == from do
-        send_to_session({pid, name}, "#{sessions[from]}: #{message}")
-      end
-    end
+    send_to_members(
+      "#{sessions[from]}: #{message}",
+      Enum.filter(sessions, fn {pid, _name} -> pid != from end)
+    )
   end
 
-  defp send_to_session({pid, _name}, message, exlude_pid \\ nil) when exlude_pid != pid do
+  defp send_to_session({pid, _name}, message) do
     SshChat.Session.send_message(pid, message)
   end
 end
