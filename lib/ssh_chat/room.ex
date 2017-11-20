@@ -1,4 +1,4 @@
-defmodule SshChatRoom do
+defmodule SshChat.Room do
   @moduledoc """
   The users connected to the chat room
 
@@ -50,7 +50,7 @@ defmodule SshChatRoom do
 
   def handle_cast({:announce, message}, sessions) do
     Map.keys(sessions)
-    |> Enum.each(fn(pid) -> SshChatSession.send_message(pid, " * #{message}") end)
+    |> Enum.each(fn(pid) -> SshChat.Session.send_message(pid, " * #{message}") end)
     {:noreply, sessions}
   end
 
@@ -65,7 +65,7 @@ defmodule SshChatRoom do
 
     others
     |> Map.keys
-    |> Enum.each(fn(pid) -> SshChatSession.send_message(pid, "#{name}: #{message}") end)
+    |> Enum.each(fn(pid) -> SshChat.Session.send_message(pid, "#{name}: #{message}") end)
     {:noreply, sessions}
   end
 

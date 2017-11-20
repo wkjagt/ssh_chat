@@ -1,7 +1,7 @@
-defmodule SshChatSupervisor do
+defmodule SshChat.Supervisor do
   use Supervisor
 
-  @name SshChatSupervisor
+  @name SshChat.Supervisor
 
   def start_link(config) do
     Supervisor.start_link(__MODULE__, config, name: @name)
@@ -9,9 +9,9 @@ defmodule SshChatSupervisor do
 
   def init(config) do
     children = [
-      worker(SshChatDaemon, [config]),
-      supervisor(SshChatSession.Supervisor, []),
-      worker(SshChatRoom, []),
+      worker(SshChat.Daemon, [config]),
+      supervisor(SshChat.SessionSupervisor, []),
+      worker(SshChat.Room, []),
     ]
 
     supervise(children, strategy: :rest_for_one)

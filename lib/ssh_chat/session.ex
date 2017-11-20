@@ -1,11 +1,11 @@
-defmodule SshChatSession do
+defmodule SshChat.Session do
   use GenServer
 
   # --- Client ---
 
   def start_session(user, addr) do
     # starts a session via supervisor
-    {:ok, session_pid} = Supervisor.start_child(SshChatSession.Supervisor, [user, addr])
+    {:ok, session_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user, addr])
     spawn fn -> initialize_io_loop(user, addr, session_pid) end
   end
 
@@ -21,7 +21,7 @@ defmodule SshChatSession do
     Process.group_leader(session_pid, Process.group_leader)
 
     IO.puts("Welcome to Elixir SshChat #{user}! #{Mix.Project.config[:version]}")
-    SshChatSession.input_loop({user, addr, session_pid})
+    SshChat.Session.input_loop({user, addr, session_pid})
   end
 
   def input_loop({user, _addr, pid} = state) do
@@ -40,8 +40,8 @@ defmodule SshChatSession do
         GenServer.stop(pid, {:error, reason})
 
       msg ->
-        SshChatRoom.message(pid, String.trim(String.Chars.to_string(msg)))
-        SshChatSession.input_loop(state)
+        SshChat.Room.message(pid, String.trim(String.Chars.to_string(msg)))
+        SshChat.Session.input_loop(state)
 
     end
   end
@@ -57,7 +57,7 @@ defmodule SshChatSession do
 
   def init({:ok, user, _addr}) do
     # user is a charlist, we want strings
-    SshChatRoom.register(self(), "#{user}")
+    SshChat.Room.register(self(), "#{user}")
     {:ok, []}
   end
 

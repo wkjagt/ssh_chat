@@ -7,6 +7,6 @@ defmodule SshChat do
       max_sessions: Application.get_env(:max_sessions, :port, 1000)
     }
 
-    SshChatSupervisor.start_link(config)
+    SshChat.Supervisor.start_link(config)
   end
 end
