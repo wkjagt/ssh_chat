@@ -1,8 +1,8 @@
 defmodule SshChat.Session do
   use GenServer
 
-  def start(user, addr) do
-    {:ok, child_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user, addr])
+  def start(user) do
+    {:ok, child_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user])
 
     # supervise this?
     spawn fn ->
@@ -26,8 +26,8 @@ defmodule SshChat.Session do
 
   # --- GenServer Client
 
-  def start_link(user, addr) do
-    GenServer.start_link(__MODULE__, {:ok, user, addr}, [])
+  def start_link(user) do
+    GenServer.start_link(__MODULE__, {:ok, user}, [])
   end
 
   def send_message(pid, msg) do
@@ -36,7 +36,7 @@ defmodule SshChat.Session do
 
   # --- GenServer Callbacks ---
 
-  def init({:ok, user, _addr}) do
+  def init({:ok, user}) do
     SshChat.Room.register(self(), "#{user}")
     {:ok, []}
   end
