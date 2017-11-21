@@ -1,26 +1,28 @@
+require IEx
+
 defmodule SshChat.Session do
   use GenServer
 
-  def start(user) do
-    {:ok, child_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user])
+  def start(user_name) do
+    {:ok, child_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user_name])
 
     # supervise this?
     spawn fn ->
       Process.link(child_pid)
       Process.group_leader(child_pid, Process.group_leader)
 
-      input_loop(user, child_pid)
+      input_loop(%User{name: user_name, pid: child_pid})
     end
   end
 
-  def input_loop(user, pid) do
-    case IO.gets("#{user} > ") do
-      {:error, :interrupted} -> GenServer.stop(pid, :normal)
-      {:error, reason} -> GenServer.stop(pid, {:error, reason})
+  def input_loop(user) do
+    case IO.gets("#{user.name} > ") do
+      {:error, :interrupted} -> GenServer.stop(user.pid, :normal)
+      {:error, reason} -> GenServer.stop(user.pid, {:error, reason})
 
       msg ->
-        SshChat.Room.message(pid, String.trim(to_string(msg)))
-        input_loop(user, pid)
+        SshChat.Room.message(user, String.trim(to_string(msg)))
+        input_loop(user)
     end
   end
 
@@ -37,7 +39,8 @@ defmodule SshChat.Session do
   # --- GenServer Callbacks ---
 
   def init({:ok, user}) do
-    SshChat.Room.register(self(), "#{user}")
+    user = %User{pid: self(), name: "#{user}"}
+    SshChat.Room.register(user)
     {:ok, []}
   end
 
