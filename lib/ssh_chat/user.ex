@@ -5,7 +5,7 @@ defmodule User do
     user1.pid == user2.pid
   end
 
-  def receive(user, %Message{sender: nil, text: text}) do
+  def receive(_user, %Message{sender: nil, text: text}) do
     IO.puts "** #{text} **"
   end
 

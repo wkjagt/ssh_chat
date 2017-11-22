@@ -44,7 +44,7 @@ defmodule SshChat.Session do
   # --- GenServer Callbacks ---
 
   def init({:ok, user_name}) do
-    user = %User{pid: self(), name: "#{user_name}"}
+    user = %User{pid: self(), name: user_name}
     SshChat.Room.register(user)
     {:ok, user}
   end
