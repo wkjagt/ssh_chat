@@ -7,8 +7,7 @@ defmodule SshChat.NopKeyApi do
     :ssh_file.host_key(algorithm, props)
   end
 
-  def is_auth_key(key, user, _options) do
-    Logger.info("Authorized #{user}")
+  def is_auth_key(_key, _user, _options) do
     true
   end
 end

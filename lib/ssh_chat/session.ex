@@ -1,17 +1,22 @@
 require IEx
+require Logger
 
 defmodule SshChat.Session do
   use GenServer
 
-  def start(user_name) do
-    {:ok, child_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user_name])
+  def shell(user_name) do
+    # child_pid = the process id of the new child of SessionSupervisor
+    # which is SshChat.Session (the current module). As a result,
+    # start_link (below) is called with [user_name]
+    {:ok, shell_session_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user_name])
 
-    # supervise this?
     spawn fn ->
-      Process.link(child_pid)
-      Process.group_leader(child_pid, Process.group_leader)
+      Process.link(shell_session_pid)
 
-      input_loop(%User{name: user_name, pid: child_pid})
+      # set the group leader to the same process as the shell session pid
+      Process.group_leader(shell_session_pid, Process.group_leader)
+
+      input_loop(%User{name: user_name, pid: shell_session_pid})
     end
   end
 
@@ -28,8 +33,8 @@ defmodule SshChat.Session do
 
   # --- GenServer Client
 
-  def start_link(user) do
-    GenServer.start_link(__MODULE__, {:ok, user}, [])
+  def start_link(user_name) do
+    GenServer.start_link(__MODULE__, {:ok, user_name}, [])
   end
 
   def send_message(pid, msg) do
@@ -38,9 +43,8 @@ defmodule SshChat.Session do
 
   # --- GenServer Callbacks ---
 
-  def init({:ok, user}) do
-    user = %User{pid: self(), name: "#{user}"}
-    SshChat.Room.register(user)
+  def init({:ok, user_name}) do
+    SshChat.Room.register(%User{pid: self(), name: "#{user_name}"})
     {:ok, []}
   end
 

@@ -54,8 +54,7 @@ defmodule SshChat.Room do
   end
 
   defp send_to_users(users, message, sender) do
-    msg = "#{sender.name}: #{message}"
-    Enum.filter(users, fn user -> user != sender end) |> send_to_users(msg)
+    MapSet.delete(users, sender) |> send_to_users("#{sender.name}: #{message}")
   end
 
   defp send_to_user(user, message) do
