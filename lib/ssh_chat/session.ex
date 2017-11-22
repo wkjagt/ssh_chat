@@ -13,7 +13,7 @@ defmodule SshChat.Session do
     spawn fn ->
       Process.link(shell_session_pid)
 
-      # set the group leader to the same process as the shell session pid
+      # set the group leader to the same process as the shellsession pid
       Process.group_leader(shell_session_pid, Process.group_leader)
 
       input_loop(%User{name: user_name, pid: shell_session_pid})
@@ -25,8 +25,8 @@ defmodule SshChat.Session do
       {:error, :interrupted} -> GenServer.stop(user.pid, :normal)
       {:error, reason} -> GenServer.stop(user.pid, {:error, reason})
 
-      msg ->
-        SshChat.Room.message(user, String.trim(to_string(msg)))
+      message ->
+        SshChat.Room.message(%Message{sender: user, text: String.trim(to_string(message))})
         input_loop(user)
     end
   end
@@ -37,19 +37,20 @@ defmodule SshChat.Session do
     GenServer.start_link(__MODULE__, {:ok, user_name}, [])
   end
 
-  def send_message(pid, msg) do
-    GenServer.cast(pid, {:message, msg})
+  def send_message(recipient, message) do
+    GenServer.cast(recipient.pid, {:message, message})
   end
 
   # --- GenServer Callbacks ---
 
   def init({:ok, user_name}) do
-    SshChat.Room.register(%User{pid: self(), name: "#{user_name}"})
-    {:ok, []}
+    user = %User{pid: self(), name: "#{user_name}"}
+    SshChat.Room.register(user)
+    {:ok, user}
   end
 
-  def handle_cast({:message, msg}, state) do
-    IO.puts(msg)
-    {:noreply, state}
+  def handle_cast({:message, message}, user) do
+    User.receive(user, message)
+    {:noreply, user}
   end
 end

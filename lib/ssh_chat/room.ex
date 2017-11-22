@@ -14,12 +14,12 @@ defmodule SshChat.Room do
     GenServer.cast(@name, {:register, user})
   end
 
-  def announce(message) do
-    GenServer.cast(@name, {:announce, message})
+  def announce(text) do
+    GenServer.cast(@name, {:announce, %Message{sender: nil, text: text}})
   end
 
-  def message(from, message) do
-    GenServer.cast(@name, {:message, from, message})
+  def message(message) do
+    GenServer.cast(@name, {:message, message})
   end
 
   # --- Callbacks ---
@@ -38,8 +38,8 @@ defmodule SshChat.Room do
     {:noreply, users}
   end
 
-  def handle_cast({:message, sender, message}, users) do
-    send_to_users(users, message, sender)
+  def handle_cast({:message, message}, users) do
+    send_to_users(users, message)
     {:noreply, users}
   end
 
@@ -53,11 +53,7 @@ defmodule SshChat.Room do
     Enum.each(users, &send_to_user(&1, message))
   end
 
-  defp send_to_users(users, message, sender) do
-    MapSet.delete(users, sender) |> send_to_users("#{sender.name}: #{message}")
-  end
-
   defp send_to_user(user, message) do
-    SshChat.Session.send_message(user.pid, message)
+    SshChat.Session.send_message(user, message)
   end
 end
