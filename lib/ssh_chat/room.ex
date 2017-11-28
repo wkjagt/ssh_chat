@@ -44,9 +44,7 @@ defmodule SshChat.Room do
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, users) do
-    {name, users} = MapSet.delete(users, pid)
-    announce("#{name} left")
-    {:noreply, users}
+    {:noreply, MapSet.delete(users, pid)}
   end
 
   defp send_to_users(users, message) do
