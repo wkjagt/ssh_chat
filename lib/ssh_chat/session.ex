@@ -5,36 +5,18 @@ defmodule SshChat.Session do
   use GenServer
 
   def shell(user_name) do
-    # child_pid = the process id of the new child of SessionSupervisor
-    # which is SshChat.Session (the current module). As a result,
-    # start_link (below) is called with [user_name]
-    {:ok, shell_session_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user_name])
+    {:ok, input_pid} = SshChat.Input.start_link
+    {:ok, shell_session_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user_name, input_pid])
 
-    spawn fn ->
-      Process.link(shell_session_pid)
+    Process.group_leader(shell_session_pid, self())
 
-      # set the group leader to the same process as the shellsession pid
-      Process.group_leader(shell_session_pid, Process.group_leader)
-
-      input_loop(%User{name: user_name, pid: shell_session_pid})
-    end
-  end
-
-  def input_loop(user) do
-    case IO.gets("#{user.name} > ") do
-      {:error, :interrupted} -> GenServer.stop(user.pid, :normal)
-      {:error, reason} -> GenServer.stop(user.pid, {:error, reason})
-
-      message ->
-        SshChat.Room.message(%Message{sender: user, text: String.trim(to_string(message))})
-        input_loop(user)
-    end
+    input_pid
   end
 
   # --- GenServer Client
 
-  def start_link(user_name) do
-    GenServer.start_link(__MODULE__, {:ok, user_name}, [])
+  def start_link(user_name, input_pid) do
+    GenServer.start_link(__MODULE__, {:ok, user_name, input_pid}, [])
   end
 
   def send_message(recipient, message) do
@@ -43,14 +25,23 @@ defmodule SshChat.Session do
 
   # --- GenServer Callbacks ---
 
-  def init({:ok, user_name}) do
-    user = %User{pid: self(), name: user_name}
+  def init({:ok, user_name, input_pid}) do
+    user = %User{pid: self(), name: user_name, input_pid: input_pid}
     SshChat.Room.register(user)
+    SshChat.Input.wait(user)
+
     {:ok, user}
   end
 
   def handle_cast({:message, message}, user) do
     User.receive(user, message)
+    SshChat.Input.wait(user)
+
+    {:noreply, user}
+  end
+
+  def handle_info(whatever, user) do
+    Logger.info(inspect(whatever))
     {:noreply, user}
   end
 end

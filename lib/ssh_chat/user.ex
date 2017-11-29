@@ -1,5 +1,5 @@
 defmodule User do
-  defstruct [:pid, :name]
+  defstruct [:pid, :name, :input_pid]
 
   def same?(user1, user2) do
     user1.pid == user2.pid
