@@ -4,26 +4,17 @@ require Logger
 defmodule SshChat.Session do
   use GenServer
 
-  def shell(user_name) do
-    {:ok, input_pid} = SshChat.Input.start_link
-    {:ok, shell_session_pid} = Supervisor.start_child(SshChat.SessionSupervisor, [user_name, input_pid])
-
-    Process.group_leader(shell_session_pid, self())
-
-    input_pid
-  end
-
-  # --- GenServer Client
-
   def start_link(user_name, input_pid) do
     GenServer.start_link(__MODULE__, {:ok, user_name, input_pid}, [])
   end
+
+  # --- Client API
 
   def send_message(recipient, message) do
     GenServer.cast(recipient.pid, {:message, message})
   end
 
-  # --- GenServer Callbacks ---
+  # --- Callbacks ---
 
   def init({:ok, user_name, input_pid}) do
     user = %User{pid: self(), name: user_name, input_pid: input_pid}
@@ -40,8 +31,7 @@ defmodule SshChat.Session do
     {:noreply, user}
   end
 
-  def handle_info(whatever, user) do
-    Logger.info(inspect(whatever))
+  def handle_info(_, user) do
     {:noreply, user}
   end
 end
