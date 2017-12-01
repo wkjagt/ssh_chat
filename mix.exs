@@ -20,7 +20,6 @@ defmodule SshChat.Mixfile do
 
   defp deps do
     [
-      {:gettext, "~> 0.11"},
     ]
   end
 end

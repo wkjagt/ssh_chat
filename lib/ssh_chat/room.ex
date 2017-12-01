@@ -1,4 +1,5 @@
 require IEx
+require Logger
 
 defmodule SshChat.Room do
   use GenServer
@@ -25,12 +26,12 @@ defmodule SshChat.Room do
   # --- Callbacks ---
 
   def init(:ok) do
-    {:ok, MapSet.new}
+    {:ok, %{}}
   end
 
   def handle_cast({:register, user}, users) do
     Process.monitor(user.pid)
-    {:noreply, MapSet.put(users, user)}
+    {:noreply, Map.put(users, user.pid, user)}
   end
 
   def handle_cast({:announce, message}, users) do
@@ -44,14 +45,19 @@ defmodule SshChat.Room do
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, users) do
-    {:noreply, MapSet.delete(users, pid)}
+    case Map.fetch(users, pid) do
+      {:ok, user} -> announce("#{user.name} left")
+      {:error} -> nil
+    end
+
+    {:noreply, Map.delete(users, pid)}
   end
 
   defp send_to_users(users, message) do
-    Enum.each(users, &send_to_user(&1, message))
+    Enum.each(users, fn {_, user} -> send_to_user(user, message) end)
   end
 
   defp send_to_user(user, message) do
-    SshChat.Session.send_message(user, message)
+    SshChat.Session.receive(user, message)
   end
 end

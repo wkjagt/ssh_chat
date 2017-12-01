@@ -10,14 +10,14 @@ defmodule SshChat.Session do
 
   # --- Client API
 
-  def send_message(recipient, message) do
+  def receive(recipient, message) do
     GenServer.cast(recipient.pid, {:message, message})
   end
 
   # --- Callbacks ---
 
   def init({:ok, user_name, input_pid}) do
-    user = %User{pid: self(), name: user_name, input_pid: input_pid}
+    user = User.new(user_name, input_pid)
     SshChat.Room.register(user)
     SshChat.Input.wait(user)
 
