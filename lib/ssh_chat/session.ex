@@ -20,7 +20,6 @@ defmodule SshChat.Session do
 
   def stop(user) do
     GenServer.cast(user.pid, {:stop, user})
-    # GenServer.stop(user.pid, {:error, reason})
   end
 
   # --- Callbacks ---

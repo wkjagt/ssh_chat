@@ -18,7 +18,9 @@ defmodule SshChat.Input do
   end
 
   def handle_cast({:wait, user}, _) do
-    case IO.gets("#{user.name} > ") do
+    prompt = [:green, user.name, :reset, ": "] |> IO.ANSI.format
+
+    case IO.gets(prompt) do
       {:error, :interrupted} ->
         SshChat.Session.stop(user)
         {:stop, :normal, nil}

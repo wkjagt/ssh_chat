@@ -42,11 +42,7 @@ defmodule SshChat.Room do
   # --- Callbacks ---
 
   def init(:ok) do
-    state = %{
-      name: "Main Room",
-      users: %{},
-      history: [],
-    }
+    state = %{name: "Main Room", users: %{}, history: []}
     {:ok, state}
   end
 
@@ -66,13 +62,6 @@ defmodule SshChat.Room do
     announce("#{user.name} left")
 
     {:noreply, %{room | users: Map.delete(room.users, user.pid)}}
-
-    # Enum.each(room.history, fn message ->
-    #   GenServer.cast(@name, {:private_message, user, message})
-    # end)
-    # private_announce(user, "Welcome to #{room.name}, #{user.name}!")
-
-    # {:noreply, %{room | users: Map.put(room.users, user.pid, user)}}
   end
 
   def handle_cast({:announce, message}, room) do
@@ -90,14 +79,8 @@ defmodule SshChat.Room do
     {:noreply, %{room | history: room.history ++ [message]}}
   end
 
-  def handle_info({:DOWN, _ref, :process, pid, _reason}, room) do
-
-  #   case Map.fetch(room.users, pid) do
-  #     {:ok, user} -> announce("#{user.name} left")
-  #     {:error} -> nil
-  #   end
-      {:noreply, room}
-  #   {:noreply, %{room | users: Map.delete(room.users, pid)}}
+  def handle_info({:DOWN, _, :process, _, _}, room) do
+    {:noreply, room}
   end
 
   defp send_to_users(users, message) do
