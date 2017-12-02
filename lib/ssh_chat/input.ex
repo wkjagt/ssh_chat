@@ -1,3 +1,5 @@
+require IEx
+
 defmodule SshChat.Input do
   def start_link do
     GenServer.start_link(__MODULE__, :ok, [])
@@ -17,13 +19,13 @@ defmodule SshChat.Input do
 
   def handle_cast({:wait, user}, _) do
     case IO.gets("#{user.name} > ") do
-      {:error, :interrupted} -> GenServer.stop(user.pid, :normal)
-      {:error, reason} -> GenServer.stop(user.pid, {:error, reason})
-
+      {:error, :interrupted} ->
+        SshChat.Session.stop(user)
+        {:stop, :normal, nil}
       message ->
         SshChat.Room.message(%Message{sender: user, text: String.trim(to_string(message))})
+        wait(user)
+        {:noreply, nil}
     end
-
-    {:noreply, nil}
   end
 end

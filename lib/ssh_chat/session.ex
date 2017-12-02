@@ -14,19 +14,37 @@ defmodule SshChat.Session do
     GenServer.cast(recipient.pid, {:message, message})
   end
 
+  def register_user(user) do
+    GenServer.cast(user.pid, {:register_user, user})
+  end
+
+  def stop(user) do
+    GenServer.cast(user.pid, {:stop, user})
+    # GenServer.stop(user.pid, {:error, reason})
+  end
+
   # --- Callbacks ---
 
   def init({:ok, user_name, input_pid}) do
     user = User.new(user_name, input_pid)
-    SshChat.Room.register(user)
+    register_user(user)
     SshChat.Input.wait(user)
-
     {:ok, user}
+  end
+
+  def handle_cast({:register_user, user}, user) do
+    SshChat.Room.register(user)
+    {:noreply, user}
+  end
+
+  def handle_cast({:stop, user}, user) do
+    SshChat.Room.unregister(user)
+
+    {:stop, :normal, user}
   end
 
   def handle_cast({:message, message}, user) do
     User.receive(user, message)
-    SshChat.Input.wait(user)
 
     {:noreply, user}
   end
