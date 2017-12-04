@@ -20,6 +20,6 @@ defmodule User do
   end
 
   defp format(text) do
-    text |> IO.ANSI.format |> IO.puts
+    text |> IO.ANSI.format(true) |> IO.puts
   end
 end

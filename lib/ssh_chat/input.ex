@@ -18,10 +18,11 @@ defmodule SshChat.Input do
   end
 
   def handle_cast({:wait, user}, _) do
-    prompt = [:green, user.name, :reset, ": "] |> IO.ANSI.format
+    prompt = [:green, user.name, :reset, ": "] |> IO.ANSI.format(true)
 
     case IO.gets(prompt) do
       {:error, :interrupted} ->
+        IO.puts("\nYou logged off")
         SshChat.Session.stop(user)
         {:stop, :normal, nil}
       message ->
